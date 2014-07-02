@@ -6,6 +6,9 @@
 
 var request = require('request');
 var urljoin = require('url-join');
+var RateLimiter = require('limiter').RateLimiter;
+//var limiter = new RateLimiter(10, 'minute', true);  // true: fire callback immediately
+var limiter = new RateLimiter(10, 'minute', true);
 
 // My Weather Underground API Key
 var apiKey = 'e6c0977fda8829a9';
@@ -24,17 +27,29 @@ var weatherunderground = function (debug) {
             console.log('Send HTTP request: ' + url);
         }
 
-        request(url, function (error, response, body) {
-            if (!error && response.statusCode == 200) {
+        limiter.removeTokens(1, function(err, remainingRequests) {
+          if (debug) {
+            console.log('remainingRequests=', remainingRequests);
+          }
+          if (remainingRequests < 0) {
+            console.log('Your wunderground API key exceeded its allotted usage today (' +
+                '500 calls per day with 10 calls per minute limit).');
+            //callback(false, body);
+          } else {
+            // Send http request if the token is available
+            request(url, function (error, response, body) {
+              if (!error && response.statusCode == 200) {
                 if (debug) {
-                    //console.log('response body: ' + body);
+                  //console.log('response body: ' + body);
                 }
                 callback(error, body);
-            } else {
+              } else {
                 console.log('Request failed!');
-            }
-
+              }
+            });
+          }
         });
+
     };
 };
 

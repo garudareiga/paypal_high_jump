@@ -4,7 +4,7 @@ var util = require('util');
 //var querystring = require('querystring');
 var weatherUnderground = require('./weatherunderground');
 
-var debug = false;
+var debug = true;
 var app = express();
 var wuclient = new weatherUnderground(debug);
 
@@ -28,12 +28,15 @@ function fetchWeatherAsync(state, city, callback) {
 function fetchWeather() {
   // Fetch weather for each city in parallel
   items.forEach( function(item) {
-    if (debug) {
-      console.log(util.format("Request-> ", item.city, item.state));
-    }
+    // reset before fetching latest weather data
+    item.weather = 'N/A';
 
     var state = item.state;
     var city = item.city;
+
+    if (debug) {
+      console.log(util.format("Request-> %s, %s", city, state));
+    }
 
     fetchWeatherAsync(state, city, function(error, body) {
       if (!error) {
@@ -41,19 +44,18 @@ function fetchWeather() {
         if (data.response.hasOwnProperty('error')) {
           if (debug) {
             // return "querynotfound" if we set wrong state or city name
-            console.log(util.format("Response-> %s, %s weather: ", city, state, data.response.error.type));
+            console.log(util.format("Response-> %s, %s weather: %s", city, state, data.response.error.type));
           }
         } else {
           item.weather = data.current_observation.weather;
           //item.temperature = date.current_observation.temperature_string;
           if (debug) {
-            console.log(util.format("Response-> %s, %s weather: %s %s",
+            console.log(util.format("Response-> %s, %s weather: %s",
                 city, state, item.weather));
           }
         }
       }
     });
-
   }); // Loop
 };
 
