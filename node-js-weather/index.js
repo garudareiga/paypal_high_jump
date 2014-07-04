@@ -1,10 +1,10 @@
 var express = require('express');
 var util = require('util');
-//var url = require('url');
+var url = require('url');
 //var querystring = require('querystring');
 var weatherUnderground = require('./weatherunderground');
 
-var debug = true;
+var debug = false;  // debugging
 var app = express();
 var wuclient = new weatherUnderground(debug);
 
@@ -59,10 +59,11 @@ function fetchWeather() {
   }); // Loop
 };
 
-app.get('/', function(req, res) {
-  //res.send("Welcome to Ray's Weather Report!");
-  // Rendering ./views/index.jade
-  res.render('index');
+// Create a middleware that will log to the console all parameters passed to the server
+app.use(function(req, res, next) {
+  var queryObject = url.parse(req.url, true).query;
+  console.log(queryObject);
+  next();
 });
 
 app.get('/render_weather', function(req, res) {
@@ -78,13 +79,18 @@ app.get('/weather', function(req, res, next) {
 
   fetchWeather();
 
-  // Timeout 1 second, and then render the weather data
+  // Timeout 0.5 second, and then render the weather data
   setTimeout( function() {
       res.render('weather', {weather: items})
     }
     , 0.5*1000
   );
-  //console.log('END.');
+});
+
+app.get('/*', function(req, res) {
+  //res.send("Welcome to Ray's Weather Report!");
+  // Rendering ./views/index.jade
+  res.render('index');
 });
 
 app.listen(app.get('port'), function() {

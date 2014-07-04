@@ -64,3 +64,9 @@ git push heroku master
 ```
 
 The app is now hosted on my Heroku dyno ancient-atoll-8898.
+
+## Useful Linkes
+- [Mixu's Node book](http://book.mixu.net/node/index.html)
+- [nodejitsu](http://docs.nodejitsu.com)
+- [Express API](http://expressjs.com/api.html)
+- [A short guide to Connect Middleware](http://stephensugden.com/middleware_guide/)
