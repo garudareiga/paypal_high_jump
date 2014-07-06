@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="amortization" default="dist">
+    <property name="src" location="src"/>
+    <property name="testd" location="test"/>
+
+    <property name="build" location="bin"/>
+    <property name="build.src" location="${build}/src"/>
+    <property name="build.test" location="${build}/test"/>
+    <property name="depcache" location="${build}/depcache"/>
+
+    <property name="lib" location="lib"/>
+    <property name="doc" location="javadoc"/>
+    <property name="dist" location="dist"/>
+    <property name="jarfile" location="${dist}/${ant.project.name}.jar"/>
+    <property name="compile.debug" value="true"/>
+    <property name="test.reports" location="testreport"/>
+
+    <property name="sourceversion" value="1.5"/>
+
+    <path id="classpath.base">
+        <pathelement location="${build.src}"/>
+    </path>
+
+    <path id="classpath.test">
+        <path refid="classpath.base"/>
+        <pathelement location="${build.test}"/>
+        <pathelement location="${lib}/junit-4.5.jar"/>
+    </path>
+
+    <!-- Common macro for compiling Java source -->
+    <macrodef name="Compile">
+        <attribute name="srcdir"/>
+        <attribute name="destdir"/>
+        <element name="compileoptions" implicit="true" optional="true"/>
+        <sequential>
+            <mkdir dir="@{destdir}"/>
+            <!-- avoids needing ant clean when changing interfaces -->
+            <depend srcdir="${srcdir}" destdir="${destdir}" cache="${depcache}"/>
+            <javac srcdir="@{srcdir}" destdir="@{destdir}" includeAntRuntime="no"
+                    debug="${compile.debug}" source="${sourceversion}">
+                <compilerarg value="-Xlint:unchecked" />
+                <!--<compilerarg value="-Xlint:deprecation" />-->
+                <compileoptions/>
+            </javac>
+        </sequential>
+    </macrodef>
+
+    <!-- Common macro for running junit tests in both the test and runtest targets -->
+    <macrodef name="RunJunit">
+        <attribute name="haltonfailure" default="yes" />
+        <element name="testspecification" implicit="yes" />
+        <sequential>
+            <!-- timeout at 10.5 minutes, since TransactionTest is limited to 10 minutes. -->
+            <junit printsummary="on" fork="yes" timeout="630000" haltonfailure="@{haltonfailure}" maxmemory="128M" failureproperty="junit.failed">
+                <classpath refid="classpath.test" />
+                <formatter type="plain" usefile="false"/>
+                <assertions><enable/></assertions>
+                <testspecification/>
+            </junit>
+        </sequential>
+    </macrodef>
+
+    <target name="compile" description="Compile code">
+        <Compile srcdir="${src}" destdir="${build.src}">
+            <classpath refid="classpath.base"/>
+        </Compile>
+	<copy todir="${build}" flatten="true">
+		<fileset dir="${src}">
+			<include name="bin/*.sh"/>
+		</fileset>
+	</copy>
+    </target>
+
+    <target name="javadocs" description="Build javadoc documentation">
+        <javadoc destdir="${doc}" access="private" failonerror="true" source="${sourceversion}">
+            <classpath refid="classpath.base" />
+            <fileset dir="src" defaultexcludes="yes">
+                <include name="amortization/*.java"/>
+            </fileset>
+        </javadoc>
+    </target>
+
+    <target name="dist" depends="compile" description="Build jar">
+        <mkdir dir="${dist}"/>
+        <jar jarfile="${jarfile}" basedir="${build.src}">
+            <manifest>
+                <attribute name="Main-Class" value="amortization.AmortizationScheduler"/>
+            </manifest>
+        </jar>
+    </target>
+
+    <target name="clean" description="Remove build and dist directories">
+        <delete dir="${build}"/>
+        <delete dir="${dist}"/>
+        <delete dir="${doc}"/>
+    </target>	
+	
+    <target name="testcompile" depends="compile" description="Compile all unit and system tests">
+        <Compile srcdir="${testd}" destdir="${build.test}">
+            <classpath refid="classpath.test"/>
+        </Compile>
+    </target>
+
+    <target name="test" depends="testcompile" description="Run all unit tests">
+        <RunJunit>
+            <batchtest>
+                <fileset dir="${build.test}">
+                    <include name="**/*Test.class"/>
+                    <exclude name="**/*$*.class"/>
+                    <exclude name="amortization/systemtest/*.class"/>
+                </fileset>
+            </batchtest>
+        </RunJunit>
+    </target>
+
+    <target name="runtest" depends="testcompile"
+            description="Runs the test you specify on the command line with -Dtest=">
+        <!-- Check for -Dtest command line argument -->
+        <fail unless="test" message="You must run this target with -Dtest=TestName"/>
+
+        <!-- Check if the class exists -->
+        <available property="test.exists" classname="amortization.${test}">
+                <classpath refid="classpath.test" />
+        </available>
+        <fail unless="test.exists" message="Test ${test} could not be found"/>
+
+        <RunJunit>
+            <test name="amortization.${test}"/>
+        </RunJunit>
+    </target>    
+</project>	
