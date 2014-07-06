@@ -166,7 +166,7 @@ public class AmortizationCalculator {
 		payments.add(new AmortizationPayment(paymentNumber++, 0d, 0d, amountBorrowed*CENTS_TO_DOLLARS,
 			totalPayments*CENTS_TO_DOLLARS, totalInterestPaid*CENTS_TO_DOLLARS));
 	
-		final int maxNumberOfPayments = initialTermMonths;
+		final int maxNumberOfPayments = initialTermMonths + 1;
 		while ((balance > 0) && (paymentNumber <= maxNumberOfPayments)) {
 			// Calculate H = P x J, this is your current monthly interest
 			long curMonthlyInterest = Math.round(balance * monthlyInterest);

@@ -3,11 +3,6 @@ paypal_high_jump
 
 Paypal High Jump Coding Exercise
 
+Project 1: [node-js-weather](https://github.com/garudareiga/paypal_high_jump/tree/master/node-js-weather)
 
-RateLimiter:
-https://github.com/jhurliman/node-rate-limiter
-
-it remote rm heroku
-Then you can add a new remote using this one:
-
-git remote add heroku git@heroku.com:your-app.git
+Project 2: [Amortization Schedule](https://github.com/garudareiga/paypal_high_jump/tree/master/AmortizationSchedule)
